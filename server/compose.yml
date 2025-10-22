@@ -1,0 +1,32 @@
+version: '3.9'
+services:
+  bind:
+    image: internetsystemsconsortium/bind9:9.18
+    container_name: bind
+    volumes:
+      - ./bind:/etc/bind:ro
+      - ./bind/zones:/etc/bind/zones:ro
+    networks:
+      dns_net:
+        ipv4_address: 192.168.10.10
+
+  web:
+      image: nginx:latest
+      container_name: web
+      ports:
+        - "80:80"  # Puerto HTTP
+      volumes:
+        - ./nginx/conf:/etc/nginx/conf.d:ro  # Archivos de Virtual Host
+        - ./nginx/html_public:/var/www/public:ro # Sitio Institucional
+        - ./nginx/html_private:/var/www/private:ro # Sitio Interno
+      networks:
+        dns_net:
+          ipv4_address: 192.168.10.20
+
+networks:
+  dns_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.10.0/24
+          gateway: 192.168.10.1

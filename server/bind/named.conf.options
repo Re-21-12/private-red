@@ -1,0 +1,12 @@
+options {
+    directory "/var/cache/bind";
+    forwarders {
+        8.8.8.8; # Google Public DNS
+        8.8.4.4; # Google Public DNS
+    };
+    recursion yes; # enables recursive queries for clients
+    allow-query { any; };
+    listen-on { any; };
+    dnssec-validation no;
+    auth-nxdomain no;    # conform to RFC1035
+};
