@@ -49,6 +49,63 @@ El presente documento describe el diseño, implementación y pruebas de una red 
 
 ---
 
+## Explicación del uso de firewall en Fedora
+
+En este laboratorio, el host principal utiliza Fedora Linux. Fedora emplea `firewalld` como sistema de gestión de firewall, que permite definir reglas de acceso y NAT de manera dinámica y sencilla.  
+**¿Por qué usar firewalld?**
+
+- Es el sistema recomendado y soportado en Fedora.
+- Permite administrar zonas, puertos y reglas de NAT sin editar manualmente archivos de configuración.
+- Facilita la integración con servicios como Docker y WireGuard.
+
+**Comandos de firewalld utilizados:**
+
+```bash
+sudo firewall-cmd --add-masquerade --permanent
+sudo firewall-cmd --add-forward-port=port=51820:proto=udp:toport=51820
+sudo firewall-cmd --reload
+```
+
+_No eliminar_: Estas reglas permiten el enmascaramiento (NAT) y el reenvío de puertos para la VPN, asegurando que los clientes remotos puedan acceder a la red interna a través del túnel WireGuard.
+
+---
+
+## Explicación de NAT y flujo de red
+
+**¿Qué es NAT?**  
+La Traducción de Direcciones de Red (NAT) permite que los paquetes provenientes de la red interna (por ejemplo, la VPN) salgan a otras redes (como Internet o la red del host) usando la IP del host. Esto es esencial para que los clientes VPN puedan comunicarse con servicios internos y externos.
+
+**Regla NAT utilizada:**
+
+```bash
+sudo iptables -t nat -A POSTROUTING -s 10.8.0.0/24 -o wlo1 -j MASQUERADE
+```
+
+_No eliminar_: Esta regla permite que los paquetes de la red VPN (10.8.0.0/24) salgan por la interfaz física del host (`wlo1`), ocultando las IPs internas y permitiendo la comunicación.
+
+---
+
+## Flujo de tráfico: Host → VPN → Contenedor VPN → DNS → Web → Retorno
+
+1. **Cliente remoto** se conecta a la VPN WireGuard, estableciendo un túnel seguro hacia el host Fedora.
+2. El **host Fedora** recibe el tráfico VPN en el puerto UDP 51820 y lo redirige al contenedor WireGuard (por NAT y reglas de firewall).
+3. El **contenedor WireGuard** valida el acceso y permite que el tráfico de la VPN acceda a la red interna de Docker.
+4. El cliente VPN realiza una consulta DNS (por ejemplo, para `web.lab.local`).
+   - El tráfico pasa del contenedor VPN al contenedor DNS (BIND9).
+   - El contenedor DNS responde con la IP interna del servidor web.
+5. El cliente accede al **servidor web** usando la IP proporcionada por DNS.
+   - El tráfico fluye del cliente VPN → túnel WireGuard → contenedor VPN → contenedor web.
+6. Las respuestas del servidor web siguen el mismo camino de regreso:
+   - Servidor web → contenedor VPN → túnel WireGuard → cliente remoto.
+
+**Importante:**
+
+- El firewall y NAT en Fedora aseguran que solo el tráfico autorizado fluya entre los componentes.
+- El túnel VPN protege la comunicación y permite acceso seguro a servicios internos.
+- Las reglas de firewall y NAT no deben eliminarse, ya que son esenciales para la conectividad y seguridad del entorno.
+
+---
+
 ## Tipos de redes en Docker
 
 - **bridge (Puente):** Red virtual interna (NAT) que aísla los contenedores del Host.  
