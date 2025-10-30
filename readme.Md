@@ -79,10 +79,92 @@ docker run --rm --network server_dns_net appropriate/curl \
 
 ---
 
+## Comandos rápidos para VPN WireGuard
+
+- Encender la VPN:
+  ```bash
+  sudo wg-quick up wg0
+  ```
+- Apagar la VPN:
+  ```bash
+  sudo wg-quick down wg0
+  ```
+
+---
+
 ## Buenas prácticas rápidas
 
 - Mantener un serial incremental en el SOA cada vez que cambies las zonas.
 - Usar IPs estáticas en redes de laboratorio cuando necesites reproducibilidad.
 - Configurar registros PTR para todas las IPs importantes si dependes de búsquedas inversas.
 - Documentar subredes y reglas de firewall/VPN para evitar problemas de acceso.
-# private-red
+
+# veificar interface wg0
+
+```
+ docker exec -it wg-easy wg show
+```
+
+# verofocar desde el servidor
+
+```
+docker exec -it wg-easy wg show
+```
+
+# regla de enmascaramiento
+
+```
+sudo firewall-cmd --add-masquerade --permanent
+sudo firewall-cmd --add-forward-port=port=51820:proto=udp:toport=51820
+sudo firewall-cmd --reload
+
+```
+
+# regla NAT enmascarado
+
+```
+sudo iptables -t nat -A POSTROUTING -s 10.8.0.0/24 -o wlo1 -j MASQUERADE
+```
+
+# ver mi ip
+
+```
+ip addr show wlo1
+```
+
+# desactovar syustem resolved
+
+```
+sudo systemctl stop systemd-resolved
+sudo systemctl disable systemd-resolved
+
+sudo rm -f /etc/resolv.conf
+echo "nameserver 8.8.8.8" | sudo tee /etc/resolv.conf
+
+
+```
+
+# debugg
+
+```
+wg-easy
+docker exec -it wg-easy tcpdump -i wg0
+bind
+docker exec -it bind tcpdump -i eth0
+```
+
+# Probar conectividad con los servicios en la red VPN
+
+ping 10.8.0.2 # wg-easy
+ping 10.8.0.254 # bind
+
+# Probar resolución DNS
+
+nslookup web.lab.local 10.8.0.254
+
+# Si tienes Alpine, instala herramientas DNS
+
+apk update
+apk add bind-tools
+
+iptables -t nat -A POSTROUTING -s 10.8.0.0/24 -o eth0 -j MASQUERADE

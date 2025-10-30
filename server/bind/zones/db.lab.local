@@ -14,6 +14,9 @@ $TTL    604800
 ; A Records
 ; Host/Servicio        Tipo    IP
 ; ---------------      ----    -----------
-dns                     IN      A       192.168.10.10
+dns                     IN      A       10.8.0.254 
 web                     IN      A       192.168.10.20
 interno                 IN      A       192.168.10.20
+vpn                     IN      A       192.168.10.30
+public                  IN      CNAME   web.lab.local
+private                 IN      CNAME   web.lab.local

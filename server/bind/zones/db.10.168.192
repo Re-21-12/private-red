@@ -1,18 +1,15 @@
-; Contenido de ./bind/db.10.168.192
-
 $TTL    604800
-@       IN      SOA     dns.lab.local. root.lab.local. (
+@       IN      SOA dns.lab.local. root.lab.local. (
                              2025102201 ; Serial
                               604800    ; Refresh
                                86400    ; Retry
                              2419200    ; Expire
                               604800 )  ; Negative Cache TTL
-;
-; Name Servers
-@       IN      NS      dns.lab.local.
+
+@       IN      NS  dns.lab.local.
 
 ; PTR Records (Inversa: IP a Nombre)
-; Ultimo Octeto        Tipo    Nombre FQDN
-; ---------------      ----    ------------------
-10                      IN      PTR     dns.lab.local.
-20                      IN      PTR     web.lab.local.
+254  IN  PTR dns.lab.local.
+20   IN  PTR web.lab.local.
+20   IN  PTR interno.lab.local.
+30   IN  PTR vpn.lab.local.
